@@ -18,9 +18,9 @@ use App\Http\Controllers\Api\UserController;
 //Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //    return $request->user();
 //}
-Route::get('/test',function()
-{
-    p("working");
-});
+
 Route::post('user/store',[UserController::class,'store']);
 Route::get('user/get/{flag}',[UserController::class,'index']);
+Route::get('user/{id}',[UserController::class,'show']);
+Route::delete('user/delete/{id}',[UserController::class,'destroy']);
+Route::put('/update/{id}',[UserController::class,'update']);

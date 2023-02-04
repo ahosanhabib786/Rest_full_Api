@@ -119,7 +119,22 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        //
+       $user=User::find($id);
+       if(is_null($user))
+       {
+           $response= [
+               'message'=>'User not Fund',
+               'status'=>0
+           ];
+       }
+       else{
+           $response=[
+               'message'=>'User found',
+               'status' => 1,
+               'data'   =>$user
+           ];
+       }
+       return response()->json($response,200);
     }
 
     /**
@@ -142,7 +157,56 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $user=User::find($id);
+        if(is_null($user))
+        {
+            return response()->json(
+                [
+                    'status'=>0,
+                    'message'=>"user Not Found",
+                ],
+                404
+            );
+        }
+        else{
+            DB::beginTransaction();
+            try {
+                $user->name=$request['name'];
+                $user->email=$request['email'];
+                $user->contact=$request['contact'];
+                $user->pinCode=$request['pinCode'];
+                $user->address=$request['address'];
+                $user->save();
+                DB::commit();
+
+            }
+            catch (\Exception $exception)
+            {
+                DB::rollBack();
+                $user=null;
+                if(is_null($user)){
+                    return response()->json(
+                        [
+                            'status'=>0,
+                            'message'=>"internal server error",
+                            'errMessage'=>$exception->getMessage(),
+                        ],
+                        500
+                    );
+                }
+                else{
+                    return response()->json(
+                        [
+                            'status'=>1,
+                            'message'=>"Data update Successfully",
+                        ], 300
+                    );
+                }
+
+            }
+
+
+        }
     }
 
     /**
@@ -153,6 +217,39 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $user=User::find($id);
+        if(is_null($user))
+        {
+            $response=[
+                'message'=>'User not Found',
+                'status'=>0,
+            ];
+            $respCode =404;
+        }
+        else{
+            DB::beginTransaction();
+            try {
+                $user->delete();
+                DB::commit();
+                $response=[
+                    'message'=>'user deleted successfully',
+                    'status'=>1
+                ];
+                $respCode=200;
+
+            }
+            catch (\Exception $exception)
+            {
+                DB::rollBack();
+                $response=[
+                    'message'=>'Internal Server error',
+                    'status'=>0
+                ];
+                $respCode=500;
+
+
+            }
+        }
+        return response()->json($response,$respCode);
     }
 }
