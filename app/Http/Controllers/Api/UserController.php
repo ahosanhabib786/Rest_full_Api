@@ -85,7 +85,7 @@ class UserController extends Controller
             $data=[
                 'name'=>$request->name,
                 'email'=>$request->email,
-                'password'=>Hash::make($request->password),
+                'password'=>$request->password,
             ];
             DB::beginTransaction();
             try {
@@ -184,26 +184,26 @@ class UserController extends Controller
             {
                 DB::rollBack();
                 $user=null;
-                if(is_null($user)){
-                    return response()->json(
-                        [
-                            'status'=>0,
-                            'message'=>"internal server error",
-                            'errMessage'=>$exception->getMessage(),
-                        ],
-                        500
-                    );
-                }
-                else{
-                    return response()->json(
-                        [
-                            'status'=>1,
-                            'message'=>"Data update Successfully",
-                        ], 300
-                    );
-                }
-
             }
+            if(is_null($user)){
+                return response()->json(
+                    [
+                        'status'=>0,
+                        'message'=>"internal server error",
+                        'errMessage'=>$exception->getMessage(),
+                    ],
+                    500
+                );
+            }
+            else{
+                return response()->json(
+                    [
+                        'status'=>1,
+                        'message'=>"Data update Successfully",
+                    ], 200
+                );
+            }
+
 
 
         }
@@ -251,5 +251,73 @@ class UserController extends Controller
             }
         }
         return response()->json($response,$respCode);
+    }
+    public function changePassword(Request $request ,$id)
+    {
+        $user=User::find($id);
+        if(is_null($user))
+        {
+            return response()->json(
+                [
+                    'status'=>0,
+                    'message'=>"User not found",
+                ], 404
+            );
+        }else{
+            if($user->password == $request['old_password'])
+            {
+                if($request['new_password'] == $request['confirm_password'])
+                {
+                    DB::beginTransaction();
+                    try {
+                        $user->password = $request['new_password'];
+                        $user->save();
+                        DB::commit();
+
+                    }catch (\Exception $exception)
+                    {
+                        $user=null;
+                        DB::rollBack();
+
+
+                    }
+                    if(is_null($user)){
+                        return response()->json(
+                            [
+                                'status'=>0,
+                                'message'=>"internal server error",
+                                'errMessage'=>$exception->getMessage(),
+                            ],
+                            500
+                        );
+                    }
+                    else{
+                        return response()->json(
+                            [
+                                'status'=>1,
+                                'message'=>"Password update Successfully",
+                            ], 200
+                        );
+                    }
+
+                }else{
+                    return response()->json(
+                        [
+                            'status'=>0,
+                            'message'=>'new password and old password dose not match',
+                        ], 400
+                    );
+                }
+
+            }else{
+                return response()->json(
+                    [
+                        'status'=>0,
+                        'message'=>'Old password dose not match',
+                    ], 400
+                );
+            }
+
+        }
     }
 }
